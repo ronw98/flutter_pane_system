@@ -1,0 +1,23 @@
+name: panels_system
+description: "A new Flutter project."
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.4
+  flutter: ">=3.0.0"
+
+dependencies:
+  collection: ^1.18.0
+  equatable: ^2.0.5
+  flutter:
+    sdk: flutter
+  flutter_resizable_container: ^3.0.0
+  gap: ^3.0.1
+  intersperse: ^2.0.0
+  logger: ^2.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
