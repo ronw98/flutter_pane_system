@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:panels_system/model/pane_tree.dart';
-import 'package:panels_system/pane_system.dart';
+
+import 'model/pane_tree.dart';
+import 'pane_system.dart';
 
 class PaneSystemController<T extends PaneTabData<T>> {
   PaneSystemController(this.tree);

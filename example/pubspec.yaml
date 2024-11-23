@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  panels_system:
+  flutter_pane_system:
     path: ../
 
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:gap/gap.dart';
-import 'package:panels_system/model/pane_tree.dart';
-import 'package:panels_system/pane_system.dart';
+
+import 'model/pane_tree.dart';
+import 'pane_system.dart';
 
 /// Has multiple tabs but displays a single view corresponding to the selected tab.
 class PaneWidget<T extends PaneTabData<T>> extends StatefulWidget {

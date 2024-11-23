@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
 import 'package:logger/logger.dart';
-import 'package:panels_system/model/pane_tree.dart';
-import 'package:panels_system/pane_system_controller.dart';
-import 'package:panels_system/pane_widget.dart';
+
+import 'model/pane_tree.dart';
+import 'pane_system_controller.dart';
+import 'pane_widget.dart';
 
 final logger = Logger(
   printer: PrettyPrinter(),
@@ -122,22 +123,22 @@ class _PaneTreeRootWidgetState<T extends PaneTabData<T>>
 
   @override
   Widget build(BuildContext context) {
-    return PaneTreeElementWidget(element: currentRoot);
+    return _PaneTreeElementWidget(element: currentRoot);
   }
 }
 
-class PaneTreeElementWidget<T extends PaneTabData<T>> extends StatefulWidget {
-  const PaneTreeElementWidget({super.key, required this.element});
+class _PaneTreeElementWidget<T extends PaneTabData<T>> extends StatefulWidget {
+  const _PaneTreeElementWidget({super.key, required this.element});
 
   final PaneTreeElement<T> element;
 
   @override
-  PaneTreeElementWidgetState<T> createState() =>
-      PaneTreeElementWidgetState<T>();
+  _PaneTreeElementWidgetState<T> createState() =>
+      _PaneTreeElementWidgetState<T>();
 }
 
-class PaneTreeElementWidgetState<T extends PaneTabData<T>>
-    extends State<PaneTreeElementWidget<T>> {
+class _PaneTreeElementWidgetState<T extends PaneTabData<T>>
+    extends State<_PaneTreeElementWidget<T>> {
   late PaneTreeElement<T> currentElement;
   late PaneSystemController<T> _controller;
 
@@ -149,7 +150,7 @@ class PaneTreeElementWidgetState<T extends PaneTabData<T>>
   }
 
   @override
-  void didUpdateWidget(covariant PaneTreeElementWidget<T> oldWidget) {
+  void didUpdateWidget(covariant _PaneTreeElementWidget<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.element != oldWidget.element) {
       PaneSystem.of<T>(context)
@@ -203,12 +204,12 @@ class PaneTreeElementWidgetState<T extends PaneTabData<T>>
         return ResizableContainer(
           children: [
             ResizableChild(
-              child: PaneTreeElementWidget(
+              child: _PaneTreeElementWidget(
                 element: child1,
               ),
             ),
             ResizableChild(
-              child: PaneTreeElementWidget(
+              child: _PaneTreeElementWidget(
                 element: child2,
               ),
             ),
@@ -222,12 +223,12 @@ class PaneTreeElementWidgetState<T extends PaneTabData<T>>
         return ResizableContainer(
           children: [
             ResizableChild(
-              child: PaneTreeElementWidget(
+              child: _PaneTreeElementWidget(
                 element: child1,
               ),
             ),
             ResizableChild(
-              child: PaneTreeElementWidget(element: child2),
+              child: _PaneTreeElementWidget(element: child2),
             ),
           ],
           direction: Axis.vertical,
