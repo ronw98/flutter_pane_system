@@ -1,7 +1,9 @@
 name: panels_system
-description: "A new Flutter project."
-version: 0.0.1
-publish_to: none
+description: "Pane and tabs system for flutter"
+version: 0.1.0
+homepage: https://github.com/ronw98/flutter_pane_system
+repository: https://github.com/ronw98/flutter_pane_system
+issue_tracker: https://github.com/ronw98/flutter_pane_system/issues
 
 environment:
   sdk: ^3.5.4
