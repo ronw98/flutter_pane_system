@@ -64,10 +64,12 @@ class _PaneWidgetState<T extends PaneTabData<T>> extends State<PaneWidget<T>> {
         index,
         data.copyWithVisibility(true),
       );
-    PaneSystem.of<T>(context).controller.replaceElement(
-          widget.pane,
-          widget.pane.copyWithTabs(newTabs),
-        );
+    PaneSystem.of<T>(context).controller
+      ..replaceElement(
+        widget.pane,
+        widget.pane.copyWithTabs(newTabs),
+      )
+      ..selectedPaneNotifier.value = widget.pane.id;
     setState(() {
       selectedTab = data;
     });
@@ -185,199 +187,217 @@ class _PaneWidgetState<T extends PaneTabData<T>> extends State<PaneWidget<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
       children: [
-        Align(
-          alignment: Alignment.topLeft,
-          child: _PaneTabBar<T>(
-            tabs: widget.pane.tabsData,
-            onCloseTab: _removeTab,
-            onNewTabClicked: () {
-              _addTab(
-                EmptyTab(id: PaneTree.autoIncrement, visible: true),
-                widget.pane.tabsData.length,
-              );
-            },
-            onTabClicked: (tab) {
-              setState(() {
-                selectedTab = tab;
-              });
-            },
-            onDragEnded: (tab, reinsertAt) {
-              _setTabVisibility(tab, true);
-            },
-            onDroppedSomewhere: (_) => _removeHiddenTabs(),
-            onStartedDragging: (tab) {
-              _setTabVisibility(tab, false);
-            },
-            onReceivedTab: _addTab,
-            selectedTab: selectedTab,
-          ),
-        ),
-        Expanded(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: switch (selectedTab) {
-                  EmptyTab<T>() => PaneSystem.of<T>(context)
-                      .emptyTabViewBuilder(context, widget.pane),
-                  final T tab => PaneSystem.of<T>(context).tabViewBuilder(
-                      context,
-                      tab,
+        Column(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: _PaneTabBar<T>(
+                paneId: widget.pane.id,
+                tabs: widget.pane.tabsData,
+                onCloseTab: _removeTab,
+                onNewTabClicked: () {
+                  _addTab(
+                    EmptyTab(id: PaneTree.autoIncrement, visible: true),
+                    widget.pane.tabsData.length,
+                  );
+                },
+                onTabClicked: (tab) {
+                  setState(() {
+                    selectedTab = tab;
+                  });
+                },
+                onDragEnded: (tab, reinsertAt) {
+                  _setTabVisibility(tab, true);
+                },
+                onDroppedSomewhere: (_) => _removeHiddenTabs(),
+                onStartedDragging: (tab) {
+                  _setTabVisibility(tab, false);
+                },
+                onReceivedTab: _addTab,
+                selectedTab: selectedTab,
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: switch (selectedTab) {
+                      EmptyTab<T>() => PaneSystem.of<T>(context)
+                          .emptyTabViewBuilder(context, widget.pane),
+                      final T tab => PaneSystem.of<T>(context).tabViewBuilder(
+                          context,
+                          tab,
+                        ),
+                      // Cannot happen
+                      _ => const SizedBox.shrink(),
+                    },
+                  ),
+                  ValueListenableBuilder<DropResponsePlacement?>(
+                    valueListenable: _responsePlacement,
+                    builder: (context, value, _) {
+                      return switch (value) {
+                        null => const SizedBox.shrink(),
+                        DropResponsePlacement.top => Align(
+                            alignment: Alignment.topCenter,
+                            child: FractionallySizedBox(
+                              widthFactor: 1,
+                              heightFactor: .5,
+                              child: _dropResponseIndicator,
+                            ),
+                          ),
+                        DropResponsePlacement.bottom => Align(
+                            alignment: Alignment.bottomCenter,
+                            child: FractionallySizedBox(
+                              widthFactor: 1,
+                              heightFactor: .5,
+                              child: _dropResponseIndicator,
+                            ),
+                          ),
+                        DropResponsePlacement.left => Align(
+                            alignment: Alignment.centerLeft,
+                            child: FractionallySizedBox(
+                              widthFactor: .5,
+                              heightFactor: 1,
+                              child: _dropResponseIndicator,
+                            ),
+                          ),
+                        DropResponsePlacement.right => Align(
+                            alignment: Alignment.centerRight,
+                            child: FractionallySizedBox(
+                              widthFactor: .5,
+                              heightFactor: 1,
+                              child: _dropResponseIndicator,
+                            ),
+                          ),
+                        DropResponsePlacement.center => FractionallySizedBox(
+                            widthFactor: 1,
+                            heightFactor: 1,
+                            child: _dropResponseIndicator,
+                          ),
+                      };
+                    },
+                  ),
+                  // Add to pane
+                  Center(
+                    child: FractionallySizedBox(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: _PaneDragTarget<T>(
+                        onLeave: () {
+                          _responsePlacement.value = null;
+                        },
+                        onHover: () {
+                          _responsePlacement.value =
+                              DropResponsePlacement.center;
+                        },
+                        targetColor: Colors.black,
+                        onDrop: (tab) {
+                          _addTab(
+                            tab,
+                            widget.pane.tabsData.length,
+                          );
+                          _responsePlacement.value = null;
+                        },
+                      ),
                     ),
-                  // Cannot happen
-                  _ => const SizedBox.shrink(),
-                },
-              ),
-              ValueListenableBuilder<DropResponsePlacement?>(
-                valueListenable: _responsePlacement,
-                builder: (context, value, _) {
-                  return switch (value) {
-                    null => const SizedBox.shrink(),
-                    DropResponsePlacement.top => Align(
-                        alignment: Alignment.topCenter,
-                        child: FractionallySizedBox(
-                          widthFactor: 1,
-                          heightFactor: .5,
-                          child: _dropResponseIndicator,
-                        ),
-                      ),
-                    DropResponsePlacement.bottom => Align(
-                        alignment: Alignment.bottomCenter,
-                        child: FractionallySizedBox(
-                          widthFactor: 1,
-                          heightFactor: .5,
-                          child: _dropResponseIndicator,
-                        ),
-                      ),
-                    DropResponsePlacement.left => Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: .5,
-                          heightFactor: 1,
-                          child: _dropResponseIndicator,
-                        ),
-                      ),
-                    DropResponsePlacement.right => Align(
-                        alignment: Alignment.centerRight,
-                        child: FractionallySizedBox(
-                          widthFactor: .5,
-                          heightFactor: 1,
-                          child: _dropResponseIndicator,
-                        ),
-                      ),
-                    DropResponsePlacement.center => FractionallySizedBox(
-                        widthFactor: 1,
-                        heightFactor: 1,
-                        child: _dropResponseIndicator,
-                      ),
-                  };
-                },
-              ),
-              // Add to pane
-              Center(
-                child: FractionallySizedBox(
-                  widthFactor: 1,
-                  heightFactor: 1,
-                  child: _PaneDragTarget<T>(
-                    onLeave: () {
-                      _responsePlacement.value = null;
-                    },
-                    onHover: () {
-                      _responsePlacement.value = DropResponsePlacement.center;
-                    },
-                    targetColor: Colors.black,
-                    onDrop: (tab) {
-                      _addTab(
-                        tab,
-                        widget.pane.tabsData.length,
-                      );
-                      _responsePlacement.value = null;
-                    },
                   ),
-                ),
-              ),
-              // Add to top
-              Align(
-                alignment: Alignment.topCenter,
-                child: FractionallySizedBox(
-                  heightFactor: .2,
-                  widthFactor: 1,
-                  child: _PaneDragTarget<T>(
-                    onLeave: () {
-                      _responsePlacement.value = null;
-                    },
-                    onHover: () {
-                      _responsePlacement.value = DropResponsePlacement.top;
-                    },
-                    targetColor: Colors.blue,
-                    onDrop: (PaneTab<T> data) {
-                      _onDropQuarter(data, Axis.vertical, HalfPart.start);
-                    },
+                  // Add to top
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: FractionallySizedBox(
+                      heightFactor: .2,
+                      widthFactor: 1,
+                      child: _PaneDragTarget<T>(
+                        onLeave: () {
+                          _responsePlacement.value = null;
+                        },
+                        onHover: () {
+                          _responsePlacement.value = DropResponsePlacement.top;
+                        },
+                        targetColor: Colors.blue,
+                        onDrop: (PaneTab<T> data) {
+                          _onDropQuarter(data, Axis.vertical, HalfPart.start);
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              // Add to bottom
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: FractionallySizedBox(
-                  heightFactor: .2,
-                  widthFactor: 1,
-                  child: _PaneDragTarget<T>(
-                    onLeave: () {
-                      _responsePlacement.value = null;
-                    },
-                    onHover: () {
-                      _responsePlacement.value = DropResponsePlacement.bottom;
-                    },
-                    targetColor: Colors.red,
-                    onDrop: (PaneTab<T> data) {
-                      _onDropQuarter(data, Axis.vertical, HalfPart.end);
-                    },
+                  // Add to bottom
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: FractionallySizedBox(
+                      heightFactor: .2,
+                      widthFactor: 1,
+                      child: _PaneDragTarget<T>(
+                        onLeave: () {
+                          _responsePlacement.value = null;
+                        },
+                        onHover: () {
+                          _responsePlacement.value =
+                              DropResponsePlacement.bottom;
+                        },
+                        targetColor: Colors.red,
+                        onDrop: (PaneTab<T> data) {
+                          _onDropQuarter(data, Axis.vertical, HalfPart.end);
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              // Add to left
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FractionallySizedBox(
-                  heightFactor: .8,
-                  widthFactor: .2,
-                  child: _PaneDragTarget<T>(
-                    onLeave: () {
-                      _responsePlacement.value = null;
-                    },
-                    onHover: () {
-                      _responsePlacement.value = DropResponsePlacement.left;
-                    },
-                    targetColor: Colors.yellow,
-                    onDrop: (PaneTab<T> data) {
-                      _onDropQuarter(data, Axis.horizontal, HalfPart.start);
-                    },
+                  // Add to left
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      heightFactor: .8,
+                      widthFactor: .2,
+                      child: _PaneDragTarget<T>(
+                        onLeave: () {
+                          _responsePlacement.value = null;
+                        },
+                        onHover: () {
+                          _responsePlacement.value = DropResponsePlacement.left;
+                        },
+                        targetColor: Colors.yellow,
+                        onDrop: (PaneTab<T> data) {
+                          _onDropQuarter(data, Axis.horizontal, HalfPart.start);
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              // Add to right
-              Align(
-                alignment: Alignment.centerRight,
-                child: FractionallySizedBox(
-                  heightFactor: .8,
-                  widthFactor: .2,
-                  child: _PaneDragTarget<T>(
-                    onLeave: () {
-                      _responsePlacement.value = null;
-                    },
-                    onHover: () {
-                      _responsePlacement.value = DropResponsePlacement.right;
-                    },
-                    targetColor: Colors.green,
-                    onDrop: (PaneTab<T> data) {
-                      _onDropQuarter(data, Axis.horizontal, HalfPart.end);
-                    },
+                  // Add to right
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FractionallySizedBox(
+                      heightFactor: .8,
+                      widthFactor: .2,
+                      child: _PaneDragTarget<T>(
+                        onLeave: () {
+                          _responsePlacement.value = null;
+                        },
+                        onHover: () {
+                          _responsePlacement.value =
+                              DropResponsePlacement.right;
+                        },
+                        targetColor: Colors.green,
+                        onDrop: (PaneTab<T> data) {
+                          _onDropQuarter(data, Axis.horizontal, HalfPart.end);
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
+          ],
+        ),
+        // TODO does not work
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: (_) {
+              PaneSystem.of<T>(context).controller.selectedPaneNotifier.value =
+                  widget.pane.id;
+            },
           ),
         ),
       ],
@@ -397,8 +417,10 @@ class _PaneTabBar<T extends PaneTabData<T>> extends StatefulWidget {
     required this.selectedTab,
     required this.onCloseTab,
     required this.onNewTabClicked,
+    required this.paneId,
   });
 
+  final String paneId;
   final List<PaneTab<T>> tabs;
   final PaneTab<T> selectedTab;
 
@@ -469,6 +491,7 @@ class _PaneTabBarState<T extends PaneTabData<T>> extends State<_PaneTabBar<T>> {
                             onTap: () => widget.onTabClicked(tab),
                             child: switch (tab) {
                               final EmptyTab<T> tab => EmptyPaneTabWidget(
+                                  paneId: widget.paneId,
                                   data: tab,
                                   selected: tab == widget.selectedTab,
                                   onDroppedSomewhere: () =>
@@ -482,6 +505,7 @@ class _PaneTabBarState<T extends PaneTabData<T>> extends State<_PaneTabBar<T>> {
                                   onCloseTab: widget.onCloseTab,
                                 ),
                               final T tab => PaneTabWidget(
+                                  paneId: widget.paneId,
                                   data: tab,
                                   selected: tab == widget.selectedTab,
                                   onDroppedSomewhere: () =>
@@ -608,11 +632,13 @@ class PaneTabWidget<T extends PaneTabData<T>> extends StatelessWidget {
     required this.onDroppedSomewhere,
     required this.selected,
     required this.onCloseTab,
+    required this.paneId,
   });
 
   final T data;
 
   final bool selected;
+  final String paneId;
   final VoidCallback onDroppedSomewhere;
   final void Function(T data) onStartedDragging;
   final void Function(T data) onDragEnded;
@@ -620,6 +646,8 @@ class PaneTabWidget<T extends PaneTabData<T>> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedPaneNotifier =
+        PaneSystem.of<T>(context).controller.selectedPaneNotifier;
     final tab = DefaultTextStyle(
       style: Theme.of(context).textTheme.labelSmall ?? TextStyle(),
       child: ConstrainedBox(
@@ -646,16 +674,26 @@ class PaneTabWidget<T extends PaneTabData<T>> extends StatelessWidget {
         ),
       ),
     );
-    return DecoratedBox(
-      decoration: BoxDecoration(
-          border: selected
-              ? Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary,
-                    width: 2,
-                  ),
-                )
-              : null),
+    return ValueListenableBuilder(
+      valueListenable: selectedPaneNotifier,
+      builder: (context, value, child) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: selected
+                ? Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(value == paneId ? 1 : .3),
+                      width: 4,
+                    ),
+                  )
+                : null,
+          ),
+          child: child,
+        );
+      },
       child: Draggable<T>(
         feedback: tab,
         childWhenDragging: const SizedBox(),
@@ -684,8 +722,10 @@ class EmptyPaneTabWidget<T extends PaneTabData<T>> extends StatelessWidget {
     required this.selected,
     required this.onCloseTab,
     required this.data,
+    required this.paneId,
   });
 
+  final String paneId;
   final EmptyTab<T> data;
   final bool selected;
   final VoidCallback onDroppedSomewhere;
@@ -721,16 +761,27 @@ class EmptyPaneTabWidget<T extends PaneTabData<T>> extends StatelessWidget {
         ),
       ),
     );
-    return DecoratedBox(
-      decoration: BoxDecoration(
-          border: selected
-              ? Border(
-                  bottom: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary,
-                    width: 2,
-                  ),
-                )
-              : null),
+    final selectedPaneNotifier =
+        PaneSystem.of<T>(context).controller.selectedPaneNotifier;
+    return ValueListenableBuilder(
+      valueListenable: selectedPaneNotifier,
+      builder: (context, value, child) {
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            border: selected
+                ? Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(
+                            value == paneId ? 1 : .3,
+                          ),
+                      width: 2,
+                    ),
+                  )
+                : null,
+          ),
+          child: child,
+        );
+      },
       child: Draggable<PaneTab<T>>(
         feedback: tab,
         childWhenDragging: const SizedBox(),

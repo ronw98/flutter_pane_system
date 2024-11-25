@@ -5,9 +5,13 @@ import 'model/pane_tree.dart';
 import 'pane_system.dart';
 
 class PaneSystemController<T extends PaneTabData<T>> {
-  PaneSystemController(this.tree);
+  PaneSystemController(this.tree, String initialPaneId) {
+    selectedPaneNotifier.value = initialPaneId;
+  }
 
   PaneTree<T> tree;
+
+  final ValueNotifier<String?> selectedPaneNotifier = ValueNotifier(null);
 
   ValueChanged<PaneTreeElement<T>>? _onRootChanged;
   final _treeElementNotifiers =
@@ -49,14 +53,13 @@ class PaneSystemController<T extends PaneTabData<T>> {
       elementId,
       (v) => v..remove(onElementChanged),
     );
-    if(_treeElementNotifiers[elementId]?.isEmpty ?? false) {
+    if (_treeElementNotifiers[elementId]?.isEmpty ?? false) {
       _treeElementNotifiers.remove(elementId);
     }
   }
 
   void removePane(Pane<T> element) {
-
-    if(element == tree.root) {
+    if (element == tree.root) {
       // TODO: Replace with empty root to have empty pane layout.
       return;
     }

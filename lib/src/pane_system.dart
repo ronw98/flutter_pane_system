@@ -53,6 +53,7 @@ class _PaneSystemState<T extends PaneTabData<T>> extends State<PaneSystem<T>> {
   @override
   void initState() {
     super.initState();
+    final paneId = PaneTree.autoIncrement;
     _controller = PaneSystemController<T>(
       PaneTree<T>(
         root: Pane(
@@ -63,9 +64,10 @@ class _PaneSystemState<T extends PaneTabData<T>> extends State<PaneSystem<T>> {
               visible: true,
             ),
           ],
-          id: PaneTree.autoIncrement,
+          id: paneId,
         ),
       ),
+      paneId,
     );
   }
 
