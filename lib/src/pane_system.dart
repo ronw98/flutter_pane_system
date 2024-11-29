@@ -280,7 +280,7 @@ class PaneSystemControllerProvider<T extends PaneTabData<T>>
   final TabDataBuilder<T> _tabBuilder;
 
   @override
-  bool updateShouldNotify(PaneSystemControllerProvider old) {
-    return old.controller != controller;
+  bool updateShouldNotify(PaneSystemControllerProvider oldWidget) {
+    return oldWidget.controller != controller;
   }
 }
