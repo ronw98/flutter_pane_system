@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_resizable_container/flutter_resizable_container.dart';
-import 'package:logger/logger.dart';
 
 import 'model/pane_tree.dart';
 import 'pane_system_controller.dart';
-import 'pane_widget.dart';
-
-final logger = Logger(
-  printer: PrettyPrinter(),
-  level: Level.trace,
-);
+import 'pane_widget/pane_widget.dart';
 
 typedef TabDataBuilder<T extends PaneTabData<T>> = Widget Function(
   BuildContext context,
@@ -21,6 +15,13 @@ typedef EmptyTabViewBuilder<T extends PaneTabData<T>> = Widget Function(
   Pane<T> pane,
 );
 
+/// Root widget of the entire pane system.
+///
+/// Takes in several builders used to build different parts of the layout:
+/// - [tabViewBuilder] is a [TabDataBuilder] that builds the content view of the
+///   pane for the selected [PaneTabData].
+/// - [tabBuilder] is a [TabDataBuilder] that builds the tab from a
+///   [PaneTabData].
 class PaneSystem<T extends PaneTabData<T>> extends StatefulWidget {
   const PaneSystem({
     super.key,
@@ -53,19 +54,21 @@ class _PaneSystemState<T extends PaneTabData<T>> extends State<PaneSystem<T>> {
   @override
   void initState() {
     super.initState();
+    final paneId = PaneTabData.autoIncrement;
     _controller = PaneSystemController<T>(
       PaneTree<T>(
         root: Pane(
           size: Size(0, 0),
           tabsData: [
             EmptyTab(
-              id: PaneTree.autoIncrement,
+              id: PaneTabData.autoIncrement,
               visible: true,
             ),
           ],
-          id: PaneTree.autoIncrement,
+          id: paneId,
         ),
       ),
+      paneId,
     );
   }
 
@@ -107,7 +110,6 @@ class _PaneTreeRootWidgetState<T extends PaneTabData<T>>
     currentRoot = PaneSystem.of<T>(context).controller.tree.root;
     PaneSystem.of<T>(context).controller.registerAsTreeRoot(
       (newRoot) {
-        logger.d('Updated root to $newRoot.\nFrom $currentRoot');
         setState(() {
           currentRoot = newRoot;
         });
@@ -146,7 +148,6 @@ class _PaneTreeElementWidgetState<T extends PaneTabData<T>>
   void initState() {
     super.initState();
     currentElement = widget.element;
-    logger.d('Init widget with element: $currentElement');
   }
 
   @override
@@ -168,9 +169,6 @@ class _PaneTreeElementWidgetState<T extends PaneTabData<T>>
   }
 
   void _elementChangedNotifier(PaneTreeElement<T> element) {
-    logger.d(
-      'Update widget with element: $element.\nOld element: $currentElement',
-    );
     setState(() {
       currentElement = element;
     });
@@ -202,13 +200,16 @@ class _PaneTreeElementWidgetState<T extends PaneTabData<T>>
           child2: final child2,
         ):
         return ResizableContainer(
+          divider: ResizableDivider(padding: 4),
           children: [
             ResizableChild(
+              minSize: 100,
               child: _PaneTreeElementWidget(
                 element: child1,
               ),
             ),
             ResizableChild(
+              minSize: 100,
               child: _PaneTreeElementWidget(
                 element: child2,
               ),
@@ -221,13 +222,16 @@ class _PaneTreeElementWidgetState<T extends PaneTabData<T>>
           child2: final child2,
         ):
         return ResizableContainer(
+          divider: ResizableDivider(padding: 4),
           children: [
             ResizableChild(
+              minSize: 100,
               child: _PaneTreeElementWidget(
                 element: child1,
               ),
             ),
             ResizableChild(
+              minSize: 100,
               child: _PaneTreeElementWidget(element: child2),
             ),
           ],

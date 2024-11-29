@@ -29,8 +29,11 @@ class MyApp extends StatelessWidget {
             return const Text('New tab');
           },
           emptyTabViewBuilder: (context, pane) {
-            return const Center(
-              child: Text('Empty tab'),
+            return Container(
+              color: Colors.red,
+              child: const Center(
+                child: Text('Empty tab'),
+              ),
             );
           },
         ),
